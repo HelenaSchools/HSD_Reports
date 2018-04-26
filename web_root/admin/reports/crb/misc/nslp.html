@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<!-- non framed -->
+<head>
+<!--[CRM BEGIN]-->
+<title>Free/Reduced Lunch Report</title>
+<meta name="author" content="crb-core" />
+<meta name="description" content="Percentage of students by school flagged as free or reduced lunch status." />
+<meta name="version" content="1.0" />
+<!--[CRM END]-->
+~[wc:commonscripts]
+<link href="/images/css/screen.css" rel="stylesheet" media="screen">
+<link href="/images/css/print.css" rel="stylesheet" media="print">
+</head>
+
+<body>
+
+~[wc:admin_header_css]<!-- breadcrumb start --><a href="/admin/home.html" target="_top">Start Page</a> &gt; <a href="home.html" target="_top">Reports</a> &gt; <a href="/admin/reports/CRB/customreports.html" target="_top">Custom Reports</a> &gt;Free and Reduced Lunch Summary<!-- breadcrumb end -->~[wc:admin_navigation_css]
+
+<!-- start of title -->
+<table border="0" cellspacing="0" cellpadding="4">
+<tr>
+<td class="header">Free and Reduced Lunch Summary</td>
+</tr>
+<tr>
+<td>
+<ul>
+<li> This report shows the percentage of students in each building participating in the NSLP.
+<li> The data in this report is pulled from the Lunch Status.
+<ol>
+<li> Pull up a student
+<li> Click on Lunch under Administration
+<li> Change the Lunch Status at the top of the screen
+<li> Click on the submit button
+<li> Repeat for all students
+</ol>
+<li> This report ignores the Exempt and Temporary status entries, it only includes Free and Reduced when it is calculating the percentages.
+</ul>
+</td>
+</tr>
+</table>
+<br><br>
+<!-- end of title -->
+
+<!-- start of content and bounding box -->
+<table border="0" cellspacing="0" cellpadding="0" align="center">
+<tr>
+<td colspan="2" background="/images/bond_3000_top.gif" align="right"><img src="/images/bound_box_top_right1.gif" width="15" height="9" alt="" border="0"></td>
+<td width="25"><img src="/images/bound_box_top_right2.gif" width="25" height="9" alt="" border="0"></td>
+</tr>
+<tr>
+<td width="23" background="/images/bond_box_left_edge.gif"><img src="/images/spacer.gif" width="23" height="1"></td>
+<td>
+
+<table border="0" cellspacing="0" cellpadding="4">
+<tr bgcolor="#f6f6f6">
+<td class="bold">Building Name</td>
+<td class="bold">Free</td>
+<td class="bold">Reduced</td>
+<td class="bold">Combined</td>
+</tr>
+~[tlist_sql;
+SELECT Name, Free, v_Enrollment, ROUND ( Free * 100 / v_Enrollment, 1 ) Free_Percent, 
+  Red, ROUND ( Red * 100 / v_Enrollment, 1 ) Red_Percent, 
+  NSLP, ROUND ( NSLP * 100 / v_Enrollment, 1 ) NSLP_Percent
+
+FROM (
+WITH
+  t_Enrollment AS
+    ( SELECT SchoolID AS v_SchoolID, COUNT ( ID ) AS v_Enrollment
+    FROM Students
+    WHERE Enroll_Status = 0
+    GROUP BY SchoolID )
+
+SELECT sc.Name, 
+  SUM ( CASE WHEN ps_customfields.getcf('students',s.id,'lunch_status') IN ( 'F', 'FDC' ) THEN 1 ELSE 0 END ) AS Free, 
+  SUM ( CASE WHEN ps_customfields.getcf('students',s.id,'lunch_status') = 'R' THEN 1 ELSE 0 END ) AS Red, 
+  SUM ( CASE WHEN ps_customfields.getcf('students',s.id,'lunch_status') IN ( 'F', 'R', 'FDC' ) THEN 1 ELSE 0 END ) AS NSLP,
+  v_Enrollment,
+  sc.SortOrder
+FROM Students s
+INNER JOIN Schools sc
+ON s.SchoolID = sc.School_Number
+INNER JOIN t_Enrollment
+ON v_SchoolID = s.SchoolID
+WHERE s.Enroll_Status = 0
+GROUP BY sc.Name, sc.SortOrder, v_Enrollment
+) Summary
+
+ORDER BY SortOrder;alternatecolor]
+<tr bgcolor="#edf3fe">
+<td valign="top">~(Name)</td>
+<td valign="top">~(Free) / ~(v_Enrollment)<br>~(Free_Percent)%</td>
+<td valign="top">~(Red) / ~(v_Enrollment)<br>~(Red_Percent)%</td>
+<td valign="top">~(NSLP) / ~(v_Enrollment)<br>~(NSLP_Percent)%</td>
+</tr>
+[/tlist_sql]
+~[tlist_sql;
+SELECT Free, v_Enrollment, ROUND ( Free * 100 / v_Enrollment, 1 ) Free_Percent, 
+  Red, ROUND ( Red * 100 / v_Enrollment, 1 ) Red_Percent, 
+  NSLP, ROUND ( NSLP * 100 / v_Enrollment, 1 ) NSLP_Percent
+
+FROM (
+WITH
+  t_Enrollment AS
+    ( SELECT COUNT ( ID ) AS v_Enrollment
+    FROM Students
+    WHERE Enroll_Status = 0
+     )
+
+SELECT
+  SUM ( CASE WHEN ps_customfields.getcf('students',s.id,'lunch_status') IN ( 'F', 'FDC' ) THEN 1 ELSE 0 END ) AS Free, 
+  SUM ( CASE WHEN ps_customfields.getcf('students',s.id,'lunch_status') = 'R' THEN 1 ELSE 0 END ) AS Red, 
+  SUM ( CASE WHEN ps_customfields.getcf('students',s.id,'lunch_status') IN ( 'F', 'R', 'FDC' ) THEN 1 ELSE 0 END ) AS NSLP,
+  v_Enrollment
+FROM t_Enrollment, Students s
+WHERE s.Enroll_Status = 0
+GROUP BY v_Enrollment
+) Summary]
+<tr bgcolor="#f6f6f6">
+<td valign="top">District Wide</td>
+<td valign="top">~(Free) / ~(v_Enrollment)<br>~(Free_Percent)%</td>
+<td valign="top">~(Red) / ~(v_Enrollment)<br>~(Red_Percent)%</td>
+<td valign="top">~(NSLP) / ~(v_Enrollment)<br>~(NSLP_Percent)%</td>
+</tr>
+[/tlist_sql]
+</table>
+
+</td>
+<td width="25" background="/images/bond_box_right_edge.gif"><img src="/images/spacer.gif" width="25" height="1"></td>
+</tr>
+<tr>
+<td colspan="2" background="/images/bond_3000_bot.gif" align="right"><img src="/images/bound_box_bot_right1.gif" width="15" height="12" alt="" border="0"></td>
+<td width="25"><img src="/images/bound_box_bot_right2.gif" width="25" height="12" alt="" border="0"></td>
+</tr>
+</table>
+<br>
+<!-- end of content of bounding box -->
+
+~[wc:admin_footer_css]
+
+</body>
+</html><!-- non framed -->
