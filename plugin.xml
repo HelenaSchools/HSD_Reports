@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://plugin.powerschool.pearson.com" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	description="HSD - " 
-	name="HSD - " 
-	version="0.0.01" 
+	description="HSD - Reports" 
+	name="HSD - Reports" 
+	version="0.0.03" 
 	xsi:schemaLocation="http://plugin.powerschool.pearson.com plugin.xsd">
 <publisher name="Zachary Campbell">
 <contact email="zcampbell@helenschools.org"/>
